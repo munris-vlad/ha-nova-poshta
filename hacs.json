@@ -1,5 +1,7 @@
 {
-  "name": "Нова пошта · Мои посылки",
+  "name": "Nova Poshta · My Parcels",
   "homeassistant": "2026.6.0",
-  "country": ["UA"]
+  "country": [
+    "UA"
+  ]
 }

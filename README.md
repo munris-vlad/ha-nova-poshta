@@ -29,9 +29,9 @@ The parcel description, part of the tracking number, and the parcel locker numbe
 1. Open **HACS → menu → Custom repositories**.
 2. Add `https://github.com/munris-vlad/ha-nova-poshta` with the **Integration** category.
 3. Download the integration and restart Home Assistant.
-4. Go to **Settings → Devices & services → Add integration** and search for **Nova Poshta · My parcels** (or the translated name).
+4. Go to **Settings → Devices & services → Add integration** and search for **Nova Poshta · My Parcels** (or the translated name).
 5. Get your key from [Nova Poshta → Settings → Developers](https://new.novaposhta.ua/dashboard/settings/developers), then enter it and choose the polling settings.
-6. Refresh your browser. Edit your dashboard, choose **Add card**, and select **Нова пошта · Посылки**.
+6. Refresh your browser. Edit your dashboard, choose **Add card**, and select **Nova Poshta · Parcels**.
 
 The card is bundled with the integration and loads automatically. You do not need a separate HACS Dashboard repository or manual resource registration. If you have multiple accounts, select the required sensor in the card editor.
 
@@ -39,7 +39,7 @@ For manual installation, copy `custom_components/nova_poshta_account` into `/con
 
 ## Change the API key
 
-Open **Settings → Devices & services → Nova Poshta · My parcels → Configure → New API key**.
+Open **Settings → Devices & services → Nova Poshta · My Parcels → Configure → New API key**.
 
 Leave the field blank to keep your current key. Enter a replacement key to update it. The replacement is validated before saving; if validation fails, the existing credentials and settings remain unchanged. Changes apply without restarting Home Assistant. The current key is never prefilled in the form.
 
@@ -81,7 +81,7 @@ The account and public tracking endpoints may change. This is an independent pro
 
 ## Development
 
-Version **0.2.0**, MIT license. The repository includes HACS metadata and GitHub Actions for HACS, hassfest, API tests, and JavaScript validation. These checks must pass before submission to the default HACS catalog. Adding this repository manually does not require catalog inclusion.
+Version **0.2.1**, MIT license. The repository includes HACS metadata and GitHub Actions for HACS, hassfest, API tests, and JavaScript validation. These checks must pass before submission to the default HACS catalog. Adding this repository manually does not require catalog inclusion.
 
 API tests (requires aiohttp and tzdata):
 

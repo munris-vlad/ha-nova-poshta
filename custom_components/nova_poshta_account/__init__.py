@@ -17,7 +17,7 @@ from .const import DEFAULT_DAYS, DEFAULT_DIRECTION, DEFAULT_INTERVAL, DOMAIN
 
 PLATFORMS = [Platform.SENSOR, Platform.BUTTON]
 LOGGER = logging.getLogger(__name__)
-CARD_VERSION = "0.2.0"
+CARD_VERSION = "0.2.1"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 

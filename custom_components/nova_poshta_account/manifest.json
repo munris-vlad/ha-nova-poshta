@@ -1,6 +1,6 @@
 {
   "domain": "nova_poshta_account",
-  "name": "Нова пошта · Мои посылки",
+  "name": "Nova Poshta · My Parcels",
   "codeowners": [
     "@munris-vlad"
   ],
@@ -14,5 +14,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/munris-vlad/ha-nova-poshta/issues",
   "requirements": [],
-  "version": "0.2.0"
+  "version": "0.2.1"
 }

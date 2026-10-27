@@ -167,6 +167,6 @@ if(!customElements.get(CARD_TYPE))customElements.define(CARD_TYPE,NovaPoshtaAcco
 if(!customElements.get(`${CARD_TYPE}-editor`))customElements.define(`${CARD_TYPE}-editor`,NovaPoshtaAccountCardEditor);
 window.customCards=window.customCards || [];
 if(!window.customCards.some(card=>card.type===CARD_TYPE))window.customCards.push({
-  type:CARD_TYPE,name:"Нова пошта · Посылки",description:"Все посылки в одной карточке: подробные статусы, получение и доставка.",preview:true,
+  type:CARD_TYPE,name:"Nova Poshta · Parcels",description:"All parcels in one card: detailed statuses, pickup locations, and delivery estimates.",preview:true,
   getEntitySuggestion:(hass,entity)=>hass.states[entity]?.attributes?.integration===DOMAIN ? {config:{type:`custom:${CARD_TYPE}`,entity}} : null
 });
