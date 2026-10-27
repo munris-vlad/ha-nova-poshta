@@ -1,12 +1,16 @@
 {
   "domain": "nova_poshta_account",
   "name": "Нова пошта · Мои посылки",
+  "categories": [
+    "productivity_information"
+  ],
   "codeowners": [
     "@munris-vlad"
   ],
   "config_flow": true,
   "dependencies": [
-    "frontend"
+    "frontend",
+    "http"
   ],
   "documentation": "https://github.com/munris-vlad/ha-nova-poshta",
   "integration_type": "service",

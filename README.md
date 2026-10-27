@@ -1,75 +1,94 @@
-# Нова пошта · Мои посылки
+# Nova Poshta · My Parcels
 
-Автоматическое отслеживание входящих и исходящих посылок Новой почты в Home Assistant по API-ключу. Номера ТТН добавляются автоматически. В комплект входит собственная карточка с таблицей и визуальным редактором — без Markdown, Jinja и дополнительных загрузок карточек.
+Automatically discover and track incoming and outgoing Nova Poshta parcels in Home Assistant using your account API key. Tracking numbers are added automatically. The integration includes its own dashboard card and visual editor: no Markdown, Jinja templates, or separate card installation required.
 
-## Возможности
+## Features
 
-- Одна карточка: число активных посылок, число ожидающих получения, таблица и обновление.
-- Подробный текущий статус движения, место получения, ожидаемые дата и время доставки, ссылка на отслеживание.
-- Выбор столбцов, направлений посылок, языка и компактного вида через визуальный редактор карточки.
-- Смена API-ключа в настройках интеграции в любой момент. Пустое поле сохраняет текущий ключ. Новый ключ проверяется до сохранения.
-- Русский, украинский и английский интерфейс карточки и настройки интеграции.
-- Опрос каждые 15 минут по умолчанию; диапазон 5–1440 минут. Поиск по умолчанию за 365 дней; диапазон 1–730 дней.
+- One card with active and ready-for-pickup counts, a parcel table, and a refresh button.
+- Detailed current tracking events, pickup locations, estimated delivery dates and times, and tracking links.
+- Visual settings for columns, incoming/outgoing parcels, compact layout, and language.
+- Optional **Hide when there are no active parcels** setting. It respects the direction selected in the card. Connection errors stay visible.
+- Follows the Home Assistant interface language by default; Russian, Ukrainian, and English can also be selected manually.
+- Change your API key at any time in the integration options. A blank field keeps the existing key. Replacement keys are validated before saving.
+- Default polling interval: 15 minutes, configurable from 5 to 1440 minutes. Default lookback: 365 days, configurable from 1 to 730 days.
 
-## Требования
+## Requirements
 
-Home Assistant 2026.6 или новее, включённый стандартный интерфейс Home Assistant и API-ключ кабинета Новой почты. Посылки должны быть доступны соответствующему аккаунту.
+Home Assistant 2026.6 or later, the standard Home Assistant frontend, and a Nova Poshta account API key. The account must have access to the parcels you want to track.
 
-## Установка через HACS
+## Install with HACS
 
-1. Открыть HACS → меню → «Пользовательские репозитории».
-2. Добавить `https://github.com/munris-vlad/ha-nova-poshta`, категория **Integration**.
-3. Скачать интеграцию и перезапустить Home Assistant.
-4. «Настройки» → «Устройства и службы» → «Добавить интеграцию» → **Нова пошта · Мои посылки**.
-5. Указать API-ключ и параметры загрузки.
-6. Обновить страницу браузера. В редакторе панели выбрать «Добавить карточку» → **Нова пошта · Посылки**.
+1. Open **HACS → menu → Custom repositories**.
+2. Add `https://github.com/munris-vlad/ha-nova-poshta` with the **Integration** category.
+3. Download the integration and restart Home Assistant.
+4. Go to **Settings → Devices & services → Add integration** and search for **Nova Poshta · My parcels** (or the translated name).
+5. Enter your Nova Poshta API key and choose the polling settings.
+6. Refresh your browser. Edit your dashboard, choose **Add card**, and select **Нова пошта · Посылки**.
 
-Карточка поставляется внутри интеграции и автоматически подключается. Отдельный репозиторий типа Dashboard и ручная регистрация ресурсов не требуются. При нескольких аккаунтах выберите нужный датчик в настройках карточки.
+The card is bundled with the integration and loads automatically. You do not need a separate HACS Dashboard repository or manual resource registration. If you have multiple accounts, select the required sensor in the card editor.
 
-Для ручной установки скопировать `custom_components/nova_poshta_account` в `/config/custom_components/`, перезапустить Home Assistant и выполнить шаги 4–6.
+For manual installation, copy `custom_components/nova_poshta_account` into `/config/custom_components/`, restart Home Assistant, and follow steps 4–6.
 
-## Замена ключа
+## Change the API key
 
-«Настройки» → «Устройства и службы» → **Нова пошта · Мои посылки** → «Настроить» → **Новый API-ключ**. Можно менять ключ вместе с направлением, периодом поиска и интервалом обновления. При ошибке проверки старые настройки сохраняются. Изменения применяются без перезапуска Home Assistant.
+Open **Settings → Devices & services → Nova Poshta · My parcels → Configure → New API key**.
 
-Текущий ключ не подставляется в форму. Поле нового ключа можно оставить пустым.
+Leave the field blank to keep your current key. Enter a replacement key to update it. The replacement is validated before saving; if validation fails, the existing credentials and settings remain unchanged. Changes apply without restarting Home Assistant. The current key is never prefilled in the form.
 
-## Карточка
+You can also change the account directions, polling interval, and lookback period here.
 
-Карточку можно добавить на любую панель через каталог карточек; она также предлагается для датчика активных посылок. В визуальном редакторе доступны:
+## Card settings
 
-- Датчик аккаунта и заголовок.
-- Входящие, исходящие или оба направления.
-- Столбцы: посылка, статус, получение, доставка.
-- Компактный вид, кнопка обновления и язык интерфейса. По умолчанию используется язык Home Assistant; язык можно выбрать вручную.
+Add the card through the dashboard card picker. It is also suggested when adding the integration's active-parcels sensor. The visual editor supports:
 
-Настройки карточки фильтруют отображение. Чтобы изменить загрузку данных из API, используйте настройки интеграции. Время доставки отображается в часовом поясе Home Assistant. Это прогноз перевозчика.
+- Account sensor and custom title.
+- Incoming, outgoing, or both directions.
+- Columns: parcel, status, pickup, and delivery.
+- Compact layout and refresh button.
+- Hide when no active parcels match the selected direction; disabled by default. The card reappears when a parcel becomes active.
+- Automatic Home Assistant language or a manual language override.
 
-## Сущности
+Card filters affect presentation. Use the integration options to change which data is loaded from the API. Estimated delivery time is displayed in the Home Assistant time zone and remains the carrier's estimate.
 
-Каждый аккаунт создаёт датчик активных посылок с атрибутом `parcels`, датчик ожидающих получения и кнопку обновления. Карточка использует одну сущность — датчик активных посылок; связанная кнопка определяется автоматически, включая переименованные сущности.
+## Entities and privacy
 
-Ключ хранится только в записи интеграции Home Assistant. Карточка получает подготовленные данные через Home Assistant и не обращается к Новой почте напрямую. API-ключ, телефоны, платёжные данные и внутренние идентификаторы клиентов в атрибуты не передаются. Список посылок и время обновления исключены из записи истории.
+Each account creates an active-parcels sensor with a `parcels` attribute, a ready-for-pickup sensor, and a refresh button. The card uses a single entity: the active-parcels sensor. It automatically finds the related refresh button, including renamed entities.
 
-## API и обработка ошибок
+The API key is stored in the Home Assistant config entry. The card receives prepared data through Home Assistant and never calls Nova Poshta directly. API keys, phone numbers, payment details, and internal customer IDs are excluded from entity attributes. Parcel lists and refresh timestamps are excluded from Recorder history.
 
-Используются запросы только чтения:
+## API behavior and limitations
 
-- `InternetDocument.getIncomingDocumentsByPhone` и `getOutgoingDocumentsByPhone` для автоматического списка.
-- Публичный `GET /site/v.1.0/shipments/tracking/{ttn}` с украинской локализацией для подробного текущего события и времени доставки.
+Only read requests are used:
 
-Списки загружаются до пустой страницы. Повтор страницы или превышение 100 страниц вызывает ошибку вместо неполного списка. Отправления старше выбранного окна не загружаются.
+- `InternetDocument.getIncomingDocumentsByPhone` and `getOutgoingDocumentsByPhone` discover account parcels.
+- Public `GET /site/v.1.0/shipments/tracking/{ttn}` with Ukrainian localization retrieves detailed tracking events and delivery estimates.
 
-Завершённые статусы 2, 3, 9, 10, 11, 102, 103, 106, отметка удаления и заполненная дата получения исключаются. Неизвестные статусы остаются видимыми. Подробный статус берётся из события `now`, иначе из последнего `passed`; будущие события исключаются.
+Every page is loaded until an empty page is returned. Repeated pages or more than 100 pages produce an error rather than a silently incomplete list. Shipments older than the selected lookback window are not included.
 
-При сбое списка аккаунта датчики недоступны — ошибка не превращается в «0 посылок». При отдельном сбое подробного отслеживания показывается свежий общий статус из списка аккаунта. Запросы подробностей ограничены четырьмя одновременно.
+Terminal status codes 2, 3, 9, 10, 11, 102, 103, and 106, deleted waybills, and parcels with a receiving timestamp are excluded. Unknown statuses remain visible. Detailed statuses use the current `now` event, or the latest completed `passed` event; planned future events are never used as current statuses.
 
-Методы зависят от API кабинета и публичного сайта перевозчика и могут измениться. Проект независимый, не является официальным продуктом Новой почты.
+If the account list cannot be retrieved, sensors become unavailable instead of reporting zero parcels. If only detailed tracking fails, the fresh general account status is shown. Detailed requests are limited to four concurrent requests.
 
-## Разработка
+The account and public tracking endpoints may change. This is an independent project and is not an official Nova Poshta product.
 
-Версия **0.2.0**, лицензия MIT. Репозиторий содержит HACS-метаданные и GitHub Actions для HACS, hassfest, API-тестов и проверки JavaScript. Успешный запуск этих Actions необходим перед заявкой в общий каталог HACS.
+## Development
 
-API-тесты: `python -m unittest discover -s tests -p test_api.py -v` (нужны aiohttp и tzdata).
+Version **0.2.0**, MIT license. The repository includes HACS metadata and GitHub Actions for HACS, hassfest, API tests, and JavaScript validation. These checks must pass before submission to the default HACS catalog. Adding this repository manually does not require catalog inclusion.
 
-Полный набор, включая смену ключа: `python -m unittest discover -s tests -v` в среде установленного Home Assistant.
+API tests (requires aiohttp and tzdata):
+
+```sh
+python -m unittest discover -s tests -p test_api.py -v
+```
+
+Full tests, including API key replacement, require a Home Assistant runtime:
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+Card behavior checks:
+
+```sh
+node --test tests/card.test.cjs
+```

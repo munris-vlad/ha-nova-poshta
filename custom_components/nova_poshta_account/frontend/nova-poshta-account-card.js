@@ -11,8 +11,15 @@ function texts(config, hass) {
   const language = !config.language || config.language === "auto" ? hass?.language : config.language;
   return TEXT[(language || "en").split("-")[0]] || TEXT.en;
 }
+TEXT.ru.hide_empty = "Скрывать, если нет активных посылок";
+TEXT.uk.hide_empty = "Приховувати, якщо немає активних посилок";
+TEXT.en.hide_empty = "Hide when there are no active parcels";
 function sensors(hass) {
   return Object.keys(hass?.states || {}).filter(id => id.startsWith("sensor.") && hass.states[id].attributes?.integration === DOMAIN);
+}
+function shouldHide(config, state, rows) {
+  return Boolean(config.hide_empty && state && !["unknown","unavailable"].includes(state.state)
+    && Array.isArray(state.attributes?.parcels) && !rows.length);
 }
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -41,13 +48,13 @@ class NovaPoshtaAccountCard extends HTMLElement {
   constructor() { super(); this.attachShadow({mode:"open"}); this._busy=false; }
   static getConfigElement() { return document.createElement(`${CARD_TYPE}-editor`); }
   static getStubConfig(hass) {
-    return {entity:sensors(hass)[0] || "", language:"auto", compact:true, direction:"both", show_refresh:true};
+    return {entity:sensors(hass)[0] || "", language:"auto", compact:true, direction:"both", show_refresh:true, hide_empty:false};
   }
   setConfig(config) {
     if (config.columns && (!Array.isArray(config.columns) || !config.columns.length || config.columns.some(c => !DEFAULT_COLUMNS.includes(c)))) {
       throw new Error("Choose at least one valid parcel column");
     }
-    this._config={compact:true,show_refresh:true,direction:"both",language:"auto",...config};
+    this._config={compact:true,show_refresh:true,hide_empty:false,direction:"both",language:"auto",...config};
     this._render();
   }
   set hass(hass) {
@@ -58,7 +65,7 @@ class NovaPoshtaAccountCard extends HTMLElement {
     this._state=state;
     if (changed) this._render();
   }
-  getCardSize() { return Math.max(2, 1 + (this._state?.attributes?.parcels?.length || 0)); }
+  getCardSize() { return this.hidden ? 0 : Math.max(2, 1 + (this._state?.attributes?.parcels?.length || 0)); }
   getGridOptions() { return {columns:12, min_columns:6, rows:"auto"}; }
   async _refresh() {
     const button=this._state?.attributes?.refresh_entity;
@@ -78,7 +85,7 @@ class NovaPoshtaAccountCard extends HTMLElement {
     root.replaceChildren();
     const style=element("style");
     style.textContent=`
-      :host{display:block}ha-card{overflow:hidden}.head{padding:16px 16px 12px;display:flex;align-items:center;gap:12px}.heading{flex:1;min-width:0}h2{font-size:18px;font-weight:500;margin:0 0 4px}.counts{color:var(--secondary-text-color);font-size:12px}.refresh{cursor:pointer;color:var(--primary-color);background:transparent;border:0;border-radius:50%;padding:9px;display:flex;align-items:center}.refresh:hover{background:var(--secondary-background-color)}.refresh:focus-visible,a:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}.refresh:disabled{opacity:.45;cursor:default}.refresh ha-icon{--mdc-icon-size:22px}.scroll{padding:0 16px 14px;overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.45}th{text-align:left;color:var(--secondary-text-color);font-weight:500;font-size:12px}th,td{padding:10px 8px;border-bottom:1px solid var(--divider-color);vertical-align:top}th:first-child,td:first-child{padding-left:0}th:last-child,td:last-child{padding-right:0}tbody tr:last-child td{border-bottom:0}a{color:var(--primary-color);text-decoration:none;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}a:hover{text-decoration:underline}.number{display:block;color:var(--secondary-text-color);font-size:11px;margin-top:4px;white-space:nowrap}.delivery{white-space:nowrap}.date{display:block}.time{display:block;font-weight:500}.status{min-width:85px;max-width:200px}.pickup{min-width:70px;max-width:160px;overflow-wrap:anywhere}.description{min-width:110px;max-width:260px}.pickup-row .status{color:var(--success-color,#43a047)}.message{padding:4px 16px 18px;color:var(--secondary-text-color);font-size:14px}.error{color:var(--error-color)}.compact th,.compact td{padding-top:8px;padding-bottom:8px}.compact .head{padding-bottom:8px}
+      :host{display:block}:host([hidden]){display:none!important}ha-card{overflow:hidden}.head{padding:16px 16px 12px;display:flex;align-items:center;gap:12px}.heading{flex:1;min-width:0}h2{font-size:18px;font-weight:500;margin:0 0 4px}.counts{color:var(--secondary-text-color);font-size:12px}.refresh{cursor:pointer;color:var(--primary-color);background:transparent;border:0;border-radius:50%;padding:9px;display:flex;align-items:center}.refresh:hover{background:var(--secondary-background-color)}.refresh:focus-visible,a:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}.refresh:disabled{opacity:.45;cursor:default}.refresh ha-icon{--mdc-icon-size:22px}.scroll{padding:0 16px 14px;overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.45}th{text-align:left;color:var(--secondary-text-color);font-weight:500;font-size:12px}th,td{padding:10px 8px;border-bottom:1px solid var(--divider-color);vertical-align:top}th:first-child,td:first-child{padding-left:0}th:last-child,td:last-child{padding-right:0}tbody tr:last-child td{border-bottom:0}a{color:var(--primary-color);text-decoration:none;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}a:hover{text-decoration:underline}.number{display:block;color:var(--secondary-text-color);font-size:11px;margin-top:4px;white-space:nowrap}.delivery{white-space:nowrap}.date{display:block}.time{display:block;font-weight:500}.status{min-width:85px;max-width:200px}.pickup{min-width:70px;max-width:160px;overflow-wrap:anywhere}.description{min-width:110px;max-width:260px}.pickup-row .status{color:var(--success-color,#43a047)}.message{padding:4px 16px 18px;color:var(--secondary-text-color);font-size:14px}.error{color:var(--error-color)}.compact th,.compact td{padding-top:8px;padding-bottom:8px}.compact .head{padding-bottom:8px}
       @media(max-width:430px){.scroll{padding:0 12px 12px}.head{padding:14px 12px 8px}table{font-size:12px}th,td{padding-left:5px;padding-right:5px}.description{min-width:90px}.status{min-width:65px}.pickup{min-width:55px}.number{font-size:10px}h2{font-size:17px}}
       @media(max-width:350px){table,tbody,tr,td{display:block}thead{display:none}tbody tr{padding:9px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;border-bottom:1px solid var(--divider-color)}td,.compact td{border:0;padding:0!important;min-width:0!important;max-width:none!important}.description{grid-column:1/-1}td:not(.description):before{content:attr(data-label);display:block;font-size:10px;color:var(--secondary-text-color);margin-bottom:2px}.date,.time{display:inline}.time:before{content:' '}}
     `;
@@ -89,6 +96,7 @@ class NovaPoshtaAccountCard extends HTMLElement {
     header.append(heading); card.append(header);
     const unavailable=state && ["unknown","unavailable"].includes(state.state);
     const rows=Array.isArray(state?.attributes?.parcels) ? state.attributes.parcels.filter(p => this._config.direction === "both" || p.direction === this._config.direction) : [];
+    this.hidden=shouldHide(this._config,state,rows);
     if (state && !unavailable) heading.append(element("div",`${t.active}: ${rows.length} · ${t.ready}: ${rows.filter(p => p.status==="at_pickup_point").length}`,"counts"));
     if (this._config.show_refresh && state) {
       const button=element("button",null,"refresh");button.title=t.refresh;button.setAttribute("aria-label",t.refresh);button.disabled=this._busy;
@@ -126,7 +134,7 @@ class NovaPoshtaAccountCard extends HTMLElement {
 
 class NovaPoshtaAccountCardEditor extends HTMLElement {
   constructor() {super();this.attachShadow({mode:"open"});}
-  setConfig(config) {this._config={language:"auto",compact:true,show_refresh:true,direction:"both",...config};this._render();}
+  setConfig(config) {this._config={language:"auto",compact:true,show_refresh:true,hide_empty:false,direction:"both",...config};this._render();}
   set hass(hass) {this._hass=hass;if(this._form)this._form.hass=hass;else this._render();}
   _render() {
     if(!this._config || !this._hass)return;
@@ -140,6 +148,7 @@ class NovaPoshtaAccountCardEditor extends HTMLElement {
       {name:"columns",selector:{select:{multiple:true,options:DEFAULT_COLUMNS.map(value=>({value,label:t[value]}))}}},
       {name:"compact",selector:{boolean:{}}},
       {name:"show_refresh",selector:{boolean:{}}},
+      {name:"hide_empty",selector:{boolean:{}}},
       {name:"language",selector:{select:{options:[{value:"ru",label:"Русский"},{value:"uk",label:"Українська"},{value:"en",label:"English"},{value:"auto",label:t.auto}]}}}
     ];
     if(!form.data.columns)form.data={...form.data,columns:[...DEFAULT_COLUMNS]};

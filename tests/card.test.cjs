@@ -35,3 +35,17 @@ test('delivery is shown in the Home Assistant time zone', () => {
   const result = vm.runInContext('delivery("2026-10-28T16:00:00Z", {config:{time_zone:"Europe/Kyiv"}})', context);
   assert.equal(result[1], '18:00');
 });
+test('optional empty-card hiding respects availability and filtered rows', () => {
+  assert.equal(vm.runInContext('shouldHide({hide_empty:true}, {state:"0", attributes:{parcels:[]}}, [])', context), true);
+  assert.equal(vm.runInContext('shouldHide({hide_empty:false}, {state:"0", attributes:{parcels:[]}}, [])', context), false);
+  assert.equal(vm.runInContext('shouldHide({hide_empty:true}, {state:"unavailable", attributes:{parcels:[]}}, [])', context), false);
+  assert.equal(vm.runInContext('shouldHide({hide_empty:true}, {state:"unknown", attributes:{parcels:[]}}, [])', context), false);
+  assert.equal(vm.runInContext('shouldHide({hide_empty:true}, undefined, [])', context), false);
+  assert.equal(vm.runInContext('shouldHide({hide_empty:true}, {state:"1", attributes:{parcels:[{}]}}, [{}])', context), false);
+  assert.equal(vm.runInContext('shouldHide({hide_empty:true}, {state:"1", attributes:{parcels:[{direction:"incoming"}]}}, [])', context), true);
+});
+test('a hidden card reports zero layout height', () => {
+  const Card = registry.get('nova-poshta-account-card');
+  const card = new Card();card.setConfig({});card.hidden=true;
+  assert.equal(card.getCardSize(), 0);
+});
