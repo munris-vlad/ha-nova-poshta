@@ -16,13 +16,21 @@ Automatically discover and track incoming and outgoing Nova Poshta parcels in Ho
 
 Home Assistant 2026.6 or later, the standard Home Assistant frontend, and a Nova Poshta account API key. The account must have access to the parcels you want to track.
 
+Get your API key from the [Developers settings in your Nova Poshta account](https://new.novaposhta.ua/dashboard/settings/developers). Sign in to your account first.
+
+## Screenshot
+
+![Nova Poshta dashboard card with sensitive parcel details blurred](docs/images/parcel-card.png)
+
+The parcel description, part of the tracking number, and the parcel locker number have been blurred for privacy.
+
 ## Install with HACS
 
 1. Open **HACS → menu → Custom repositories**.
 2. Add `https://github.com/munris-vlad/ha-nova-poshta` with the **Integration** category.
 3. Download the integration and restart Home Assistant.
 4. Go to **Settings → Devices & services → Add integration** and search for **Nova Poshta · My parcels** (or the translated name).
-5. Enter your Nova Poshta API key and choose the polling settings.
+5. Get your key from [Nova Poshta → Settings → Developers](https://new.novaposhta.ua/dashboard/settings/developers), then enter it and choose the polling settings.
 6. Refresh your browser. Edit your dashboard, choose **Add card**, and select **Нова пошта · Посылки**.
 
 The card is bundled with the integration and loads automatically. You do not need a separate HACS Dashboard repository or manual resource registration. If you have multiple accounts, select the required sensor in the card editor.
