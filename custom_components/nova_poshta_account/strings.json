@@ -46,5 +46,14 @@
       "invalid_auth": "Nova Poshta rejected the API key.",
       "already_configured": "This API key is already used by another integration entry."
     }
+  },
+  "selector": {
+    "direction": {
+      "options": {
+        "incoming": "Incoming",
+        "outgoing": "Outgoing",
+        "both": "Incoming and outgoing"
+      }
+    }
   }
 }

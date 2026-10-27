@@ -16,11 +16,7 @@ from .const import DEFAULT_DAYS, DEFAULT_DIRECTION, DEFAULT_INTERVAL, DOMAIN
 def settings_schema(defaults):
     return {
         vol.Required("direction", default=defaults.get("direction", DEFAULT_DIRECTION)): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[
-                {"value": "incoming", "label": "Входящие"},
-                {"value": "outgoing", "label": "Исходящие"},
-                {"value": "both", "label": "Входящие и исходящие"},
-            ])),
+            selector.SelectSelectorConfig(options=["incoming", "outgoing", "both"], translation_key="direction")),
         vol.Required("scan_interval", default=defaults.get("scan_interval", DEFAULT_INTERVAL)): vol.All(vol.Coerce(int), vol.Range(min=5, max=1440)),
         vol.Required("lookback_days", default=defaults.get("lookback_days", DEFAULT_DAYS)): vol.All(vol.Coerce(int), vol.Range(min=1, max=730)),
     }

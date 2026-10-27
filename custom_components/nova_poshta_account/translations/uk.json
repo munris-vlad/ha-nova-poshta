@@ -46,5 +46,14 @@
       "invalid_auth": "Нова пошта відхилила API-ключ.",
       "already_configured": "Цей API-ключ уже використовується іншим записом інтеграції."
     }
+  },
+  "selector": {
+    "direction": {
+      "options": {
+        "incoming": "Вхідні",
+        "outgoing": "Вихідні",
+        "both": "Вхідні та вихідні"
+      }
+    }
   }
 }

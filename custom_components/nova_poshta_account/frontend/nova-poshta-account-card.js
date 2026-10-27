@@ -8,8 +8,8 @@ const TEXT = {
   en: {title:"Nova Poshta",description:"Parcel",status:"Status",pickup:"Pickup",delivery:"Delivery",active:"Active",ready:"Ready for pickup",refresh:"Refresh",empty:"No active parcels",unavailable:"Unable to update parcels. Check the connection and API key in the integration settings.",missing:"Select the active parcels sensor in the card settings.",error:"Unable to refresh parcels",entity:"Parcels sensor",name:"Title",columns:"Columns",direction:"Parcels to display",both:"Incoming and outgoing",incoming:"Incoming",outgoing:"Outgoing",compact:"Compact layout",show_refresh:"Refresh button",language:"Language",auto:"Home Assistant language",all:"All directions"}
 };
 function texts(config, hass) {
-  const language = config.language === "auto" ? hass?.language : (config.language || "ru");
-  return TEXT[(language || "ru").split("-")[0]] || TEXT.en;
+  const language = !config.language || config.language === "auto" ? hass?.language : config.language;
+  return TEXT[(language || "en").split("-")[0]] || TEXT.en;
 }
 function sensors(hass) {
   return Object.keys(hass?.states || {}).filter(id => id.startsWith("sensor.") && hass.states[id].attributes?.integration === DOMAIN);
@@ -41,13 +41,13 @@ class NovaPoshtaAccountCard extends HTMLElement {
   constructor() { super(); this.attachShadow({mode:"open"}); this._busy=false; }
   static getConfigElement() { return document.createElement(`${CARD_TYPE}-editor`); }
   static getStubConfig(hass) {
-    return {entity:sensors(hass)[0] || "", language:"ru", compact:true, direction:"both", show_refresh:true};
+    return {entity:sensors(hass)[0] || "", language:"auto", compact:true, direction:"both", show_refresh:true};
   }
   setConfig(config) {
     if (config.columns && (!Array.isArray(config.columns) || !config.columns.length || config.columns.some(c => !DEFAULT_COLUMNS.includes(c)))) {
       throw new Error("Choose at least one valid parcel column");
     }
-    this._config={compact:true,show_refresh:true,direction:"both",language:"ru",...config};
+    this._config={compact:true,show_refresh:true,direction:"both",language:"auto",...config};
     this._render();
   }
   set hass(hass) {
@@ -126,7 +126,7 @@ class NovaPoshtaAccountCard extends HTMLElement {
 
 class NovaPoshtaAccountCardEditor extends HTMLElement {
   constructor() {super();this.attachShadow({mode:"open"});}
-  setConfig(config) {this._config={language:"ru",compact:true,show_refresh:true,direction:"both",...config};this._render();}
+  setConfig(config) {this._config={language:"auto",compact:true,show_refresh:true,direction:"both",...config};this._render();}
   set hass(hass) {this._hass=hass;if(this._form)this._form.hass=hass;else this._render();}
   _render() {
     if(!this._config || !this._hass)return;

@@ -31,3 +31,4 @@ jobs:
         with:
           node-version: "22"
       - run: node --check custom_components/nova_poshta_account/frontend/nova-poshta-account-card.js
+      - run: node --test tests/card.test.cjs
