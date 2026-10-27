@@ -17,7 +17,7 @@ from .const import DEFAULT_DAYS, DEFAULT_DIRECTION, DEFAULT_INTERVAL, DOMAIN
 
 PLATFORMS = [Platform.SENSOR, Platform.BUTTON]
 LOGGER = logging.getLogger(__name__)
-CARD_VERSION = "0.2.1"
+CARD_VERSION = "0.3.0"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -44,14 +44,18 @@ class ParcelCoordinator(DataUpdateCoordinator):
             rows = await self.api.parcels(dt_util.now(), self.settings.get("lookback_days", DEFAULT_DAYS),
                                           self.settings.get("direction", DEFAULT_DIRECTION))
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed("API key was rejected") from err
+            raise ConfigEntryAuthFailed(translation_domain=DOMAIN, translation_key="invalid_auth") from err
         except ApiError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(translation_domain=DOMAIN, translation_key="cannot_update") from err
         self.last_success = dt_util.utcnow().isoformat()
         return rows
 
 
 async def async_setup_entry(hass, entry):
+    # Historical automatic titles were stored in one language. A neutral brand
+    # keeps existing accounts readable without overwriting user-chosen titles.
+    if entry.title in {"Нова пошта · Мои посылки", "Нова пошта · Мої посилки", "Nova Poshta · My Parcels", "Nova Poshta · My parcels"}:
+        hass.config_entries.async_update_entry(entry, title="Nova Poshta")
     coordinator = ParcelCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

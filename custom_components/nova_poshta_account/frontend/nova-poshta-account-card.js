@@ -7,13 +7,29 @@ const TEXT = {
   uk: {title:"Нова пошта",description:"Посилка",status:"Статус",pickup:"Отримання",delivery:"Доставка",active:"Активні",ready:"Можна забирати",refresh:"Оновити",empty:"Активних посилок немає",unavailable:"Не вдалося оновити посилки. Перевірте підключення й API-ключ у налаштуваннях інтеграції.",missing:"Виберіть датчик активних посилок у налаштуваннях картки.",error:"Не вдалося оновити посилки",entity:"Датчик посилок",name:"Заголовок",columns:"Стовпці",direction:"Які посилки показувати",both:"Вхідні та вихідні",incoming:"Вхідні",outgoing:"Вихідні",compact:"Компактний вигляд",show_refresh:"Кнопка оновлення",language:"Мова",auto:"Мова Home Assistant",all:"Усі напрямки"},
   en: {title:"Nova Poshta",description:"Parcel",status:"Status",pickup:"Pickup",delivery:"Delivery",active:"Active",ready:"Ready for pickup",refresh:"Refresh",empty:"No active parcels",unavailable:"Unable to update parcels. Check the connection and API key in the integration settings.",missing:"Select the active parcels sensor in the card settings.",error:"Unable to refresh parcels",entity:"Parcels sensor",name:"Title",columns:"Columns",direction:"Parcels to display",both:"Incoming and outgoing",incoming:"Incoming",outgoing:"Outgoing",compact:"Compact layout",show_refresh:"Refresh button",language:"Language",auto:"Home Assistant language",all:"All directions"}
 };
-function texts(config, hass) {
+function languageCode(config, hass) {
   const language = !config.language || config.language === "auto" ? hass?.language : config.language;
-  return TEXT[(language || "en").split("-")[0]] || TEXT.en;
+  const base=String(language || "en").toLowerCase().split(/[-_]/)[0];
+  return Object.hasOwn(TEXT,base) ? base : "en";
 }
+function texts(config, hass) { return TEXT[languageCode(config,hass)]; }
 TEXT.ru.hide_empty = "Скрывать, если нет активных посылок";
 TEXT.uk.hide_empty = "Приховувати, якщо немає активних посилок";
 TEXT.en.hide_empty = "Hide when there are no active parcels";
+Object.assign(TEXT.en,{locker:"Parcel locker",branch:"Branch",status_registered:"Awaiting dispatch",status_in_transit:"In transit",status_at_pickup_point:"Ready for pickup",status_unknown:"Status pending",invalid_columns:"Choose at least one valid parcel column",lang_ru:"Russian",lang_uk:"Ukrainian",lang_en:"English",card_name:"Nova Poshta · Parcels",card_description:"All parcels in one card: detailed statuses, pickup locations, and delivery estimates."});
+Object.assign(TEXT.ru,{locker:"Почтомат",branch:"Отделение",status_registered:"Ожидает отправки",status_in_transit:"В пути",status_at_pickup_point:"Ожидает получения",status_unknown:"Статус уточняется",invalid_columns:"Выберите хотя бы один столбец посылок",lang_ru:"Русский",lang_uk:"Украинский",lang_en:"Английский",card_name:"Нова пошта · Посылки",card_description:"Все посылки в одной карточке: подробные статусы, получение и доставка."});
+Object.assign(TEXT.uk,{locker:"Поштомат",branch:"Відділення",status_registered:"Очікує відправлення",status_in_transit:"У дорозі",status_at_pickup_point:"Очікує отримання",status_unknown:"Статус уточнюється",invalid_columns:"Виберіть хоча б один стовпець посилок",lang_ru:"Російська",lang_uk:"Українська",lang_en:"Англійська",card_name:"Нова пошта · Посилки",card_description:"Усі посилки в одній картці: докладні статуси, отримання та доставка."});
+let currentHassLanguage;
+function catalogTexts() {
+  const language=currentHassLanguage || (typeof document!=="undefined" && document.documentElement?.lang) || "en";
+  return texts({}, {language});
+}
+function statusText(parcel, config, hass) {
+  const language=languageCode(config,hass),t=texts(config,hass);
+  if(parcel.status_details?.[language])return parcel.status_details[language];
+  if(parcel.status_detail && (parcel.status_detail_language || "uk")===language)return parcel.status_detail;
+  return t[`status_${parcel.status}`] || t.status_unknown;
+}
 function sensors(hass) {
   return Object.keys(hass?.states || {}).filter(id => id.startsWith("sensor.") && hass.states[id].attributes?.integration === DOMAIN);
 }
@@ -30,18 +46,20 @@ function element(tag, text, className) {
 function cleanDescription(value) {
   return String(value || "").replace(/^\d+(\(\d+\))?\s*/, "");
 }
-function pickup(parcel) {
+function pickup(parcel, t=TEXT.en) {
   const address = String(parcel.address || "");
   const point = address.match(/(Поштомат|Відділення|Отделение|Почтомат).*?№\s*(\d+)/i);
-  return point ? `${point[1]} №${point[2]}` : address || String(parcel.city || "—");
+  const name=point && /поштомат|почтомат/i.test(point[1]) ? t.locker : t.branch;
+  return point ? `${name} №${point[2]}` : address || String(parcel.city || "—");
 }
-function delivery(value, hass) {
+function delivery(value, hass, language="auto") {
   if (!value) return ["—", ""];
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return ["—", ""];
   const options = {timeZone: hass?.config?.time_zone || "Europe/Kyiv"};
-  return [new Intl.DateTimeFormat("uk-UA", {...options, day:"2-digit", month:"2-digit"}).format(date),
-    new Intl.DateTimeFormat("uk-UA", {...options, hour:"2-digit", minute:"2-digit", hourCycle:"h23"}).format(date)];
+  const locale=languageCode({language},hass);
+  return [new Intl.DateTimeFormat(locale, {...options, day:"2-digit", month:"2-digit"}).format(date),
+    new Intl.DateTimeFormat(locale, {...options, hour:"2-digit", minute:"2-digit", hourCycle:"h23"}).format(date)];
 }
 
 class NovaPoshtaAccountCard extends HTMLElement {
@@ -52,12 +70,13 @@ class NovaPoshtaAccountCard extends HTMLElement {
   }
   setConfig(config) {
     if (config.columns && (!Array.isArray(config.columns) || !config.columns.length || config.columns.some(c => !DEFAULT_COLUMNS.includes(c)))) {
-      throw new Error("Choose at least one valid parcel column");
+      throw new Error(texts(config,this._hass).invalid_columns);
     }
     this._config={compact:true,show_refresh:true,hide_empty:false,direction:"both",language:"auto",...config};
     this._render();
   }
   set hass(hass) {
+    currentHassLanguage=hass.language;
     const id=this._config?.entity || sensors(hass)[0];
     const state=hass.states[id];
     const changed=state!==this._state || hass.language!==this._hass?.language || hass.config?.time_zone!==this._hass?.config?.time_zone;
@@ -118,9 +137,9 @@ class NovaPoshtaAccountCard extends HTMLElement {
             link.href=`https://novaposhta.ua/tracking/${encodeURIComponent(parcel.tracking_number)}`;
             link.target="_blank";link.rel="noopener noreferrer";link.title=String(parcel.description || "");
             cell.append(link,element("span",`${parcel.direction==="outgoing" ? "↑" : "↓"} ${parcel.tracking_number}`,"number"));
-          } else if (column==="status") cell.textContent=parcel.status_detail || parcel.status_text || "—";
-          else if (column==="pickup") {cell.textContent=pickup(parcel);cell.title=[parcel.city,parcel.address].filter(Boolean).join(", ");}
-          else if (column==="delivery") {const [date,time]=delivery(parcel.expected_delivery,this._hass);cell.append(element("span",date,"date"),element("span",time,"time"));}
+          } else if (column==="status") cell.textContent=statusText(parcel,this._config,this._hass);
+          else if (column==="pickup") {cell.textContent=pickup(parcel,t);cell.title=[parcel.city,parcel.address].filter(Boolean).join(", ");}
+          else if (column==="delivery") {const [date,time]=delivery(parcel.expected_delivery,this._hass,this._config.language);cell.append(element("span",date,"date"),element("span",time,"time"));}
           row.append(cell);
         }
         body.append(row);
@@ -135,7 +154,12 @@ class NovaPoshtaAccountCard extends HTMLElement {
 class NovaPoshtaAccountCardEditor extends HTMLElement {
   constructor() {super();this.attachShadow({mode:"open"});}
   setConfig(config) {this._config={language:"auto",compact:true,show_refresh:true,hide_empty:false,direction:"both",...config};this._render();}
-  set hass(hass) {this._hass=hass;if(this._form)this._form.hass=hass;else this._render();}
+  set hass(hass) {
+    const previous=languageCode(this._config || {},this._hass);
+    this._hass=hass;currentHassLanguage=hass.language;
+    if(this._form && previous===languageCode(this._config || {},hass))this._form.hass=hass;
+    else this._render();
+  }
   _render() {
     if(!this._config || !this._hass)return;
     const t=texts(this._config,this._hass),form=element("ha-form");
@@ -149,7 +173,7 @@ class NovaPoshtaAccountCardEditor extends HTMLElement {
       {name:"compact",selector:{boolean:{}}},
       {name:"show_refresh",selector:{boolean:{}}},
       {name:"hide_empty",selector:{boolean:{}}},
-      {name:"language",selector:{select:{options:[{value:"ru",label:"Русский"},{value:"uk",label:"Українська"},{value:"en",label:"English"},{value:"auto",label:t.auto}]}}}
+      {name:"language",selector:{select:{options:[{value:"auto",label:t.auto},{value:"ru",label:t.lang_ru},{value:"uk",label:t.lang_uk},{value:"en",label:t.lang_en}]}}}
     ];
     if(!form.data.columns)form.data={...form.data,columns:[...DEFAULT_COLUMNS]};
     form.computeLabel=schema=>t[schema.name] || schema.name;
@@ -167,6 +191,6 @@ if(!customElements.get(CARD_TYPE))customElements.define(CARD_TYPE,NovaPoshtaAcco
 if(!customElements.get(`${CARD_TYPE}-editor`))customElements.define(`${CARD_TYPE}-editor`,NovaPoshtaAccountCardEditor);
 window.customCards=window.customCards || [];
 if(!window.customCards.some(card=>card.type===CARD_TYPE))window.customCards.push({
-  type:CARD_TYPE,name:"Nova Poshta · Parcels",description:"All parcels in one card: detailed statuses, pickup locations, and delivery estimates.",preview:true,
+  type:CARD_TYPE,get name(){return catalogTexts().card_name;},get description(){return catalogTexts().card_description;},preview:true,
   getEntitySuggestion:(hass,entity)=>hass.states[entity]?.attributes?.integration===DOMAIN ? {config:{type:`custom:${CARD_TYPE}`,entity}} : null
 });

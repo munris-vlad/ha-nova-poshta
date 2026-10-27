@@ -14,6 +14,21 @@ def parcel(number="12345678901234", code="6", **kwargs):
 
 
 class FilteringTests(unittest.TestCase):
+    def test_translation_matches_actual_event_instead_of_future_or_newer_event(self):
+        row = api.normalize(parcel(), "incoming")
+        reference = api.apply_tracking_details(row, {"tracking": [
+            {"event":"Arrival", "event_status":"now", "date":"2026-10-27T15:00:00Z", "event_name":"Прибула"}
+        ]})
+        api.apply_event_translation(row, {"tracking": [
+            {"event":"Arrival", "event_status":"passed", "date":"2026-10-27T15:00:00Z", "event_name":"Arrived"},
+            {"event":"Received", "event_status":"now", "date":"2026-10-27T16:00:00Z", "event_name":"Received"},
+        ]}, "en", reference)
+        self.assertEqual(row["status_details"], {"uk":"Прибула", "en":"Arrived"})
+        api.apply_event_translation(row, {"tracking": [
+            {"event":"Arrival", "event_status":"future", "date":"2026-10-27T15:00:00Z", "event_name":"Wrong"}
+        ]}, "ru", reference)
+        self.assertNotIn("ru", row["status_details"])
+
     def test_actual_detail_excludes_future_and_handles_unsorted_history(self):
         p = api.normalize(parcel(), "incoming")
         api.apply_tracking_details(p, {"tracking": [
@@ -63,6 +78,35 @@ class FilteringTests(unittest.TestCase):
 
 
 class PaginationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_all_supported_status_languages_have_a_shared_concurrency_limit(self):
+        import asyncio
+        client = api.NovaPoshtaApi(None, "test")
+        active = maximum = calls = 0
+        async def tracking(number, language="uk"):
+            nonlocal active, maximum, calls
+            active += 1; calls += 1; maximum = max(maximum, active)
+            await asyncio.sleep(0)
+            active -= 1
+            return {"tracking":[{"event":"Arrival", "event_status":"now", "date":"2026-10-27T15:00:00Z", "event_name":language}]}
+        client._tracking = tracking
+        rows = [api.normalize(parcel(str(i)), "incoming") for i in range(3)]
+        await client._enrich(rows)
+        self.assertEqual(calls, 9)
+        self.assertLessEqual(maximum, 4)
+        self.assertTrue(all(set(row["status_details"]) == {"en","uk","ru"} for row in rows))
+
+    async def test_primary_history_failure_uses_another_available_language(self):
+        client = api.NovaPoshtaApi(None, "test")
+        async def tracking(number, language="uk"):
+            if language == "uk":
+                raise api.ApiError("Unavailable")
+            return {"tracking":[{"event":"Arrival", "event_status":"now", "date":"2026-10-27T15:00:00Z", "event_name":language}]}
+        client._tracking = tracking
+        row = api.normalize(parcel(), "incoming")
+        await client._enrich([row])
+        self.assertEqual(row["status_detail_language"], "en")
+        self.assertEqual(set(row["status_details"]), {"en","ru"})
+
     async def test_short_pages_deduplication_and_pickup_first(self):
         client = api.NovaPoshtaApi(None, "test")
         calls = []
@@ -75,7 +119,7 @@ class PaginationTests(unittest.IsolatedAsyncioTestCase):
                 return [parcel("33333333333333", "9")]
             return []
         client._page = page
-        async def tracking(number):
+        async def tracking(number, language="uk"):
             return {"tracking": []}
         client._tracking = tracking
         rows = await client.parcels(datetime(2026, 10, 27))
@@ -87,7 +131,7 @@ class PaginationTests(unittest.IsolatedAsyncioTestCase):
         client = api.NovaPoshtaApi(None, "test")
         async def page(method, props):
             return [parcel(TrackingStatusName="У дорозі")] if props["Page"] == "1" else []
-        async def tracking(number):
+        async def tracking(number, language="uk"):
             raise api.ApiError("Unavailable")
         client._page = page
         client._tracking = tracking

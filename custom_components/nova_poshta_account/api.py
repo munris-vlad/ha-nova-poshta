@@ -65,7 +65,7 @@ def delivery_datetime(value):
     return parsed.isoformat()
 
 
-def apply_tracking_details(parcel, payload):
+def apply_tracking_details(parcel, payload, language="uk"):
     """Use current or latest completed event; planned events are never statuses."""
     if not isinstance(payload, dict) or not isinstance(payload.get("tracking"), list):
         raise ApiError("Unexpected tracking history format")
@@ -73,13 +73,30 @@ def apply_tracking_details(parcel, payload):
               and event.get("event_status") in ("now", "passed")
               and event.get("event_name") and delivery_datetime(event.get("date"))]
     current = [event for event in events if event["event_status"] == "now"]
+    latest = None
     if current or events:
         latest = max(current or events, key=lambda event: datetime.fromisoformat(delivery_datetime(event["date"])))
         parcel["status_detail"] = latest["event_name"]
+        parcel["status_detail_language"] = language
+        parcel.setdefault("status_details", {})[language] = latest["event_name"]
         parcel["status_updated_at"] = delivery_datetime(latest["date"])
     estimate = delivery_datetime(payload.get("scheduled_delivery_date"))
     if estimate:
         parcel["expected_delivery"] = estimate
+    return latest
+
+
+def apply_event_translation(parcel, payload, language, reference):
+    """Translate the same actual event, even if tracking advanced between calls."""
+    if not reference or not isinstance(payload, dict) or not isinstance(payload.get("tracking"), list):
+        return
+    for event in payload["tracking"]:
+        if (isinstance(event, dict) and event.get("event_status") in ("now", "passed")
+                and event.get("event") == reference.get("event")
+                and delivery_datetime(event.get("date")) == delivery_datetime(reference.get("date"))
+                and event.get("event_name")):
+            parcel.setdefault("status_details", {})[language] = event["event_name"]
+            return
 
 
 def normalize(row, direction):
@@ -93,8 +110,8 @@ def normalize(row, direction):
         "direction": direction,
         "status": state,
         "status_code": code,
-        "status_text": row.get("TrackingStatusName") or "Статус уточняется",
-        "description": row.get("CargoDescription") or "Посылка",
+        "status_text": row.get("TrackingStatusName") or "",
+        "description": row.get("CargoDescription") or "",
         "sender": row.get("CounterpartySenderDescription") or row.get("SenderName") or "",
         "city": row.get("CityRecipientDescription") or "",
         "address": row.get("RecipientAddressDescription") or "",
@@ -123,10 +140,10 @@ class NovaPoshtaApi:
             raise ApiError("Unable to read the Nova Poshta API") from err
         return unpack(payload)
 
-    async def _tracking(self, number):
+    async def _tracking(self, number, language="uk"):
         try:
             async with self.session.get(
-                TRACKING_URL + quote(number, safe=""), headers={"Accept-Language": "uk"},
+                TRACKING_URL + quote(number, safe=""), headers={"Accept-Language": language},
                 timeout=aiohttp.ClientTimeout(total=20),
             ) as response:
                 response.raise_for_status()
@@ -138,13 +155,26 @@ class NovaPoshtaApi:
         semaphore = asyncio.Semaphore(4)
 
         async def enrich(parcel):
-            async with semaphore:
+            async def localized(language):
+                async with semaphore:
+                    try:
+                        return await self._tracking(parcel["tracking_number"], language)
+                    except ApiError:
+                        return None
+            languages = ("uk", "en", "ru")
+            payloads = dict(zip(languages, await asyncio.gather(*(localized(lang) for lang in languages))))
+            for language in languages:
+                if payloads[language] is None:
+                    continue
                 try:
-                    apply_tracking_details(parcel, await self._tracking(parcel["tracking_number"]))
+                    reference = apply_tracking_details(parcel, payloads[language], language)
                 except ApiError:
-                    # Account-list data remains useful if public tracking fails.
-                    # A new list is built on every poll, so no stale detail survives.
-                    pass
+                    continue
+                if reference is not None:
+                    for other in languages:
+                        if other != language:
+                            apply_event_translation(parcel, payloads[other], other, reference)
+                    break
         await asyncio.gather(*(enrich(parcel) for parcel in parcels))
 
     async def parcels(self, now, days=365, direction="both"):

@@ -49,3 +49,30 @@ test('a hidden card reports zero layout height', () => {
   const card = new Card();card.setConfig({});card.hidden=true;
   assert.equal(card.getCardSize(), 0);
 });
+test('every card string is provided in all supported languages', () => {
+  assert.equal(vm.runInContext('JSON.stringify(Object.keys(TEXT.en).sort())', context), vm.runInContext('JSON.stringify(Object.keys(TEXT.ru).sort())', context));
+  assert.equal(vm.runInContext('JSON.stringify(Object.keys(TEXT.en).sort())', context), vm.runInContext('JSON.stringify(Object.keys(TEXT.uk).sort())', context));
+});
+test('localized detailed statuses are selected without leaking another language', () => {
+  assert.equal(vm.runInContext('statusText({status_details:{en:"Arrived",uk:"Прибула",ru:"Прибыла"}}, {}, {language:"en"})', context), 'Arrived');
+  assert.equal(vm.runInContext('statusText({status_details:{en:"Arrived",uk:"Прибула",ru:"Прибыла"}}, {}, {language:"ru"})', context), 'Прибыла');
+  assert.equal(vm.runInContext('statusText({status:"at_pickup_point",status_detail:"Прибула"}, {}, {language:"en"})', context), 'Ready for pickup');
+  assert.equal(vm.runInContext('statusText({status:"unknown",status_text:"Статус уточняется"}, {}, {language:"en"})', context), 'Status pending');
+});
+test('pickup labels and card picker metadata follow the UI language', () => {
+  assert.equal(vm.runInContext('pickup({address:"Поштомат №12345"},TEXT.en)', context), 'Parcel locker №12345');
+  assert.equal(vm.runInContext('pickup({address:"Відділення №12"},TEXT.ru)', context), 'Отделение №12');
+  assert.equal(vm.runInContext('pickup({address:"Відділення №12"},TEXT.uk)', context), 'Відділення №12');
+  vm.runInContext('currentHassLanguage="uk"', context);
+  assert.equal(context.window.customCards[0].name, 'Нова пошта · Посилки');
+  vm.runInContext('currentHassLanguage="en"', context);
+  assert.equal(context.window.customCards[0].name, 'Nova Poshta · Parcels');
+});
+test('the open visual editor re-renders when Home Assistant changes language', () => {
+  const Editor = registry.get('nova-poshta-account-card-editor');
+  const editor = new Editor();editor.setConfig({});
+  let rendered=0;editor._render=()=>{rendered++;};
+  editor.hass={language:'en'};editor._form={};
+  editor.hass={language:'ru'};
+  assert.equal(rendered,2);
+});

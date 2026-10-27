@@ -55,5 +55,33 @@
         "both": "Incoming and outgoing"
       }
     }
+  },
+  "device": {
+    "account": {
+      "name": "My parcels"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active": {
+        "name": "Active parcels"
+      },
+      "pickup": {
+        "name": "Ready for pickup"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh parcels"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Nova Poshta rejected the API key. Update it in the integration settings."
+    },
+    "cannot_update": {
+      "message": "Unable to update parcels. Check the connection and Nova Poshta API availability."
+    }
   }
 }

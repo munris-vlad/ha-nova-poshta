@@ -8,6 +8,7 @@ Automatically discover and track incoming and outgoing Nova Poshta parcels in Ho
 - Detailed current tracking events, pickup locations, estimated delivery dates and times, and tracking links.
 - Visual settings for columns, incoming/outgoing parcels, compact layout, and language.
 - Optional **Hide when there are no active parcels** setting. It respects the direction selected in the card. Connection errors stay visible.
+- Entity and device names, buttons, settings, messages, pickup labels, and detailed statuses support English, Ukrainian, and Russian. User-provided names, parcel descriptions, and addresses are preserved.
 - Follows the Home Assistant interface language by default; Russian, Ukrainian, and English can also be selected manually.
 - Change your API key at any time in the integration options. A blank field keeps the existing key. Replacement keys are validated before saving.
 - Default polling interval: 15 minutes, configurable from 5 to 1440 minutes. Default lookback: 365 days, configurable from 1 to 730 days.
@@ -31,7 +32,7 @@ The parcel description, part of the tracking number, and the parcel locker numbe
 3. Download the integration and restart Home Assistant.
 4. Go to **Settings → Devices & services → Add integration** and search for **Nova Poshta · My Parcels** (or the translated name).
 5. Get your key from [Nova Poshta → Settings → Developers](https://new.novaposhta.ua/dashboard/settings/developers), then enter it and choose the polling settings.
-6. Refresh your browser. Edit your dashboard, choose **Add card**, and select **Nova Poshta · Parcels**.
+6. Refresh your browser. Edit your dashboard, choose **Add card**, and select **Nova Poshta · Parcels** (or its translated name).
 
 The card is bundled with the integration and loads automatically. You do not need a separate HACS Dashboard repository or manual resource registration. If you have multiple accounts, select the required sensor in the card editor.
 
@@ -69,7 +70,7 @@ The API key is stored in the Home Assistant config entry. The card receives prep
 Only read requests are used:
 
 - `InternetDocument.getIncomingDocumentsByPhone` and `getOutgoingDocumentsByPhone` discover account parcels.
-- Public `GET /site/v.1.0/shipments/tracking/{ttn}` with Ukrainian localization retrieves detailed tracking events and delivery estimates.
+- Public `GET /site/v.1.0/shipments/tracking/{ttn}` in English, Ukrainian, and Russian retrieves detailed tracking events and delivery estimates.
 
 Every page is loaded until an empty page is returned. Repeated pages or more than 100 pages produce an error rather than a silently incomplete list. Shipments older than the selected lookback window are not included.
 
@@ -81,7 +82,7 @@ The account and public tracking endpoints may change. This is an independent pro
 
 ## Development
 
-Version **0.2.1**, MIT license. The repository includes HACS metadata and GitHub Actions for HACS, hassfest, API tests, and JavaScript validation. These checks must pass before submission to the default HACS catalog. Adding this repository manually does not require catalog inclusion.
+Version **0.3.0**, MIT license. The repository includes HACS metadata and GitHub Actions for HACS, hassfest, API tests, and JavaScript validation. These checks must pass before submission to the default HACS catalog. Adding this repository manually does not require catalog inclusion.
 
 API tests (requires aiohttp and tzdata):
 

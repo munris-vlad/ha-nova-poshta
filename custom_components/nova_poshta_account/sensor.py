@@ -7,21 +7,20 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    async_add_entities([ParcelSensor(entry, "active", "Активные посылки"),
-                        ParcelSensor(entry, "pickup", "Ожидают получения")])
+    async_add_entities([ParcelSensor(entry, "active"), ParcelSensor(entry, "pickup")])
 
 
 class ParcelSensor(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
     _unrecorded_attributes = frozenset({"parcels", "last_update"})
 
-    def __init__(self, entry, kind, name):
+    def __init__(self, entry, kind):
         super().__init__(entry.runtime_data)
         self.kind = kind
         self._attr_unique_id = f"{entry.entry_id}_{kind}"
-        self._attr_name = name
+        self._attr_translation_key = kind
         self._attr_icon = "mdi:package-variant" if kind == "active" else "mdi:package-check"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)}, name="Нова пошта · Мои посылки", manufacturer="Нова пошта")
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)}, translation_key="account", manufacturer="Nova Poshta")
 
     @property
     def native_value(self):

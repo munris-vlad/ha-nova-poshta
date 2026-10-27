@@ -39,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ApiError:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(title="Nova Poshta · My Parcels", data=user_input)
+                return self.async_create_entry(title="Nova Poshta", data=user_input)
         schema = {vol.Required(CONF_API_KEY): selector.TextSelector(selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)), **settings_schema(user_input or {})}
         return self.async_show_form(step_id="user", data_schema=vol.Schema(schema), errors=errors)
 
