@@ -1,0 +1,17 @@
+{
+  "domain": "nova_poshta_account",
+  "name": "Нова пошта · Мои посылки",
+  "codeowners": [
+    "@munris-vlad"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "frontend"
+  ],
+  "documentation": "https://github.com/munris-vlad/ha-nova-poshta",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/munris-vlad/ha-nova-poshta/issues",
+  "requirements": [],
+  "version": "0.2.0"
+}

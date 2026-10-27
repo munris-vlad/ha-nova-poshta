@@ -1,0 +1,50 @@
+{
+  "title": "Nova Poshta · My parcels",
+  "config": {
+    "step": {
+      "user": {
+        "title": "My Nova Poshta parcels",
+        "description": "Enter an API key from your Nova Poshta account to discover parcels automatically.",
+        "data": {
+          "api_key": "API key",
+          "direction": "Parcels to display",
+          "scan_interval": "Update interval (minutes)",
+          "lookback_days": "Look back (days)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update API key",
+        "data": {
+          "api_key": "API key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to retrieve parcels. Check your connection and API availability.",
+      "invalid_auth": "Nova Poshta rejected the API key."
+    },
+    "abort": {
+      "already_configured": "This API key is already configured.",
+      "reauth_successful": "The API key has been updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Parcel settings",
+        "description": "Enter a new API key to replace the current key. Leave it blank to keep the existing key. The new key is validated before saving.",
+        "data": {
+          "api_key": "New API key (leave blank to keep current)",
+          "direction": "Parcels to display",
+          "scan_interval": "Update interval (minutes)",
+          "lookback_days": "Look back (days)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to retrieve parcels. Check your connection and API availability.",
+      "invalid_auth": "Nova Poshta rejected the API key.",
+      "already_configured": "This API key is already used by another integration entry."
+    }
+  }
+}
