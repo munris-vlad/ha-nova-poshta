@@ -76,3 +76,7 @@ test('the open visual editor re-renders when Home Assistant changes language', (
   editor.hass={language:'ru'};
   assert.equal(rendered,2);
 });
+test('language selection also works in WebViews without Object.hasOwn', () => {
+  vm.runInContext('Object.hasOwn=undefined', context);
+  assert.equal(vm.runInContext('languageCode({}, {language:"ru"})', context), 'ru');
+});

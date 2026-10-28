@@ -34,9 +34,13 @@ The parcel description, part of the tracking number, and the parcel locker numbe
 5. Get your key from [Nova Poshta → Settings → Developers](https://new.novaposhta.ua/dashboard/settings/developers), then enter it and choose the polling settings.
 6. Refresh your browser. Edit your dashboard, choose **Add card**, and select **Nova Poshta · Parcels** (or its translated name).
 
-The card is bundled with the integration and loads automatically. You do not need a separate HACS Dashboard repository or manual resource registration. If you have multiple accounts, select the required sensor in the card editor.
+The card is bundled with the integration and registers automatically as a dashboard module resource. Home Assistant waits for this resource before rendering cards, including on mobile devices with a cold browser cache. You do not need a separate HACS Dashboard repository or manual resource registration. If you have multiple accounts, select the required sensor in the card editor.
 
 For manual installation, copy `custom_components/nova_poshta_account` into `/config/custom_components/`, restart Home Assistant, and follow steps 4–6.
+
+If you manage Lovelace resources in YAML mode, add `/nova_poshta_account/frontend/nova-poshta-account-card.js?v=0.3.1` to your resources with `type: module`. Existing YAML resources are never overwritten.
+
+After updating, reload the frontend once (fully close and reopen the mobile app if needed).
 
 ## Change the API key
 
@@ -82,7 +86,7 @@ The account and public tracking endpoints may change. This is an independent pro
 
 ## Development
 
-Version **0.3.0**, MIT license. The repository includes HACS metadata and GitHub Actions for HACS, hassfest, API tests, and JavaScript validation. These checks must pass before submission to the default HACS catalog. Adding this repository manually does not require catalog inclusion.
+Version **0.3.1**, MIT license. The repository includes HACS metadata and GitHub Actions for HACS, hassfest, API tests, and JavaScript validation. These checks must pass before submission to the default HACS catalog. Adding this repository manually does not require catalog inclusion.
 
 API tests (requires aiohttp and tzdata):
 

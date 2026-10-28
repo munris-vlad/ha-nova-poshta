@@ -1,10 +1,6 @@
 """Nova Poshta account parcels."""
 import logging
 from datetime import timedelta
-from pathlib import Path
-
-from homeassistant.components.frontend import add_extra_js_url
-from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -14,20 +10,16 @@ from homeassistant.util import dt as dt_util
 
 from .api import ApiError, AuthenticationError, NovaPoshtaApi
 from .const import DEFAULT_DAYS, DEFAULT_DIRECTION, DEFAULT_INTERVAL, DOMAIN
+from .frontend import async_register_card
 
 PLATFORMS = [Platform.SENSOR, Platform.BUTTON]
 LOGGER = logging.getLogger(__name__)
-CARD_VERSION = "0.3.0"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass, config):
     """Load the bundled card once, independently of account credentials."""
-    frontend_dir = Path(__file__).parent / "frontend"
-    await hass.http.async_register_static_paths([
-        StaticPathConfig(f"/{DOMAIN}/frontend", str(frontend_dir), False)
-    ])
-    add_extra_js_url(hass, f"/{DOMAIN}/frontend/nova-poshta-account-card.js?v={CARD_VERSION}")
+    await async_register_card(hass)
     return True
 
 

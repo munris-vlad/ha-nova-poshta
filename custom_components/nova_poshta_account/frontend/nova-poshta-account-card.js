@@ -10,7 +10,7 @@ const TEXT = {
 function languageCode(config, hass) {
   const language = !config.language || config.language === "auto" ? hass?.language : config.language;
   const base=String(language || "en").toLowerCase().split(/[-_]/)[0];
-  return Object.hasOwn(TEXT,base) ? base : "en";
+  return Object.prototype.hasOwnProperty.call(TEXT,base) ? base : "en";
 }
 function texts(config, hass) { return TEXT[languageCode(config,hass)]; }
 TEXT.ru.hide_empty = "Скрывать, если нет активных посылок";
